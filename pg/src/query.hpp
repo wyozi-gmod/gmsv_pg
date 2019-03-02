@@ -22,7 +22,15 @@ public:
   LUA_METHOD(run) {
     CHECK_CONNECTION
 
-    LUA->ThrowError("Async execution not implemented yet :/");
+    std::thread([](auto t, auto fut) {
+      auto ret = fut.get();
+      if (ret.index() == 0) {
+        t->Emit("success", std::get<LuaValue::table_t>(ret));
+      } else {
+        t->Emit("error", std::get<std::string>(ret));
+      }
+    }, obj, obj->manager->query(obj->query_string)).detach();
+
     return 0;
   }
 
@@ -31,16 +39,15 @@ public:
 
     auto fut = obj->manager->query(obj->query_string);
 
-    try {
-        auto ret = fut.get();
-
-        LUA->PushBool(true);
-        LuaValue(ret).PushTable(state);
-        return 2;
-    } catch(const std::exception& e) {
-        LUA->PushBool(false);
-        LUA->PushString(e.what());
-        return 2;
+    auto ret = fut.get();
+    if (ret.index() == 0) {
+      LUA->PushBool(true);
+      LuaValue(std::get<LuaValue::table_t>(ret)).PushTable(state);
+      return 2;
+    } else {
+      LUA->PushBool(false);
+      LUA->PushString(std::get<std::string>(ret).c_str());
+      return 2;
     }
   }
 };

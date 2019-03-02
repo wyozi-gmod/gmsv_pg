@@ -6,6 +6,7 @@
 #include <chrono>
 #include <thread>
 #include <future>
+#include <variant>
 
 #define STRING_GETTER(mn, fn) static int fn(lua_State *state) { \
   auto obj = Pop(state, 1);                                     \
