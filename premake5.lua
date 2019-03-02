@@ -5,7 +5,7 @@ local suffixes = {
 }
 
 defines "GMMODULE"
-cppdialect "C++11"
+cppdialect "C++14"
 
 includedirs {
   "include",
