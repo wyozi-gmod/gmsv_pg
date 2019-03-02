@@ -1,8 +1,6 @@
 #include "main.h"
 #include "connection.hpp"
 
-void* DatabaseQuery::last_query = nullptr;
-
 #ifdef _WIN32
 #pragma comment(lib, "ws2_32.lib")
 #pragma comment(lib, "libeay32.lib")

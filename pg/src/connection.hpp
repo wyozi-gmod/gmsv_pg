@@ -3,7 +3,7 @@
 
 #include "interfaces.h"
 #include "query.hpp"
-#include "prepared_query.hpp"
+#include "query_manager.hpp"
 
 using namespace GarrysMod::Lua;
 
@@ -15,6 +15,8 @@ private:
   std::string _password;
   std::string _port;
   char _type_map[MAX_PG_TYPES];
+
+  std::unique_ptr<QueryManager> manager;
 public:
   std::string name() override { return "#<DatabaseConnection>"; }
   pqxx::connection* _connection = nullptr;
@@ -26,7 +28,6 @@ public:
     AddGetter("password", get_password);
     AddGetter("port", get_port);
     AddMethod("query", query);
-    AddMethod("query_prepared", query_prepared);
     AddMethod("connect", connect);
     AddMethod("escape", escape);
     AddMethod("unescape", unescape);
@@ -42,9 +43,9 @@ public:
     AddMethod("prepare", prepare);
     AddMethod("unprepare", unprepare);
     AddMethod("set_encoding", set_encoding);
-  }
 
-  ~DatabaseConnection() { }
+    manager = std::make_unique<QueryManager>();
+  }
 public:
   LUA_METHOD(query) {
     CHECK_CONNECTION
@@ -56,23 +57,8 @@ public:
     }
 
     std::shared_ptr<DatabaseQuery> query_obj = DatabaseQuery::Make(query_string);
-    query_obj->_set_connection(obj->_connection);
-    query_obj->type_map = obj->_type_map;
-
-    return query_obj->Push(state);
-  }
-
-  LUA_METHOD(query_prepared) {
-    CHECK_CONNECTION
-    auto name = LuaValue::Pop(state, 2);
-
-    if (name.type() != Type::STRING) {
-      LUA->ThrowError("pg - prepared query name is invalid\n");
-      return 0;
-    }
-
-    std::shared_ptr<PreparedQuery> query_obj = PreparedQuery::Make(name);
-    query_obj->_set_connection(obj->_connection);
+    query_obj->_connection = obj->_connection;
+    query_obj->manager = obj->manager.get();
 
     return query_obj->Push(state);
   }
@@ -133,6 +119,9 @@ public:
       LUA->PushString(e.what());
       return 2;
     }
+
+    obj->manager->_connection = obj->_connection;
+    obj->manager->type_map = obj->_type_map;
 
     LUA->PushBool(true);
     return 1;

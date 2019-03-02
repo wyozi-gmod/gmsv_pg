@@ -5,6 +5,7 @@
 #include <pqxx/pqxx>
 #include <chrono>
 #include <thread>
+#include <future>
 
 #define STRING_GETTER(mn, fn) static int fn(lua_State *state) { \
   auto obj = Pop(state, 1);                                     \
