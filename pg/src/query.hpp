@@ -44,6 +44,7 @@ public:
       } else {
         t->Emit("error", std::get<std::string>(ret));
       }
+      if (debug) printf("[PGQuery] emitting result complete for %s\n", query.c_str());
     }, obj, obj->manager->query(query)).detach();
 
     return 0;
