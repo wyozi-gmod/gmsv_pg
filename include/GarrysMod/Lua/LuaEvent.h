@@ -12,6 +12,7 @@
 #include "LuaValue.h"
 #include "LuaObject.h"
 #include "GarrysMod/Lua/Interface.h"
+#include "concurrentqueue.h"
 
 namespace GarrysMod {
 namespace Lua {
@@ -124,8 +125,8 @@ namespace Lua {
   private:
     std::map<std::string, std::vector<std::tuple<bool, int>>> _listeners;
     std::mutex _listeners_mtx;
-    std::deque<std::tuple<std::string, std::vector<LuaValue>>> _events;
-    std::mutex _events_mtx;
+
+    moodycamel::ConcurrentQueue<std::tuple<std::string, std::vector<LuaValue>>> _events;
   private:
     int _max_events_per_tick;
   protected:
@@ -157,13 +158,9 @@ namespace Lua {
     template<typename... Args>
     void Emit(std::string name, Args ...args)
     {
-      std::unique_lock<std::mutex> lock(_events_mtx);
-
       std::vector<LuaValue> argv = { LuaValue(args)... };
 
-      _events.push_back(
-        std::make_tuple(name, argv)
-      );
+      _events.enqueue(std::make_tuple(name, argv));
     }
 
     /**
@@ -172,19 +169,19 @@ namespace Lua {
      */
     void Think(lua_State *state) override
     {
-      std::unique_lock<std::mutex> events_lock(_events_mtx);
-
-      if (_events.empty())
-        return;
       
       // Limited event iteration
-      for (int i = 0; i < std::min((int)_events.size(), _max_events_per_tick); i++)
+      for (int i = 0; i < _max_events_per_tick; i++)
       {
-        // Pop first event
-        auto event = _events.front();
+        // Try to pop first event
+        std::tuple<std::string, std::vector<LuaValue>> event;
+        bool found = _events.try_dequeue(event);
+        if (!found) {
+          break;
+        }
+
         auto name = std::get<0>(event);
         auto args = std::get<1>(event);
-        _events.pop_front();
 
         // Lock listeners vector
         std::unique_lock<std::mutex> listeners_lock(_listeners_mtx);
