@@ -6,7 +6,7 @@
 #include <unistd.h>
 #endif
 
-#define PG_VERSION "1.0.0-experimental"
+#define PG_VERSION "1.0.0-experimental-wyozipatch"
 #define PG_VERSION_MAJOR "1"
 #define PG_VERSION_MINOR "0"
 #define PG_VERSION_PATCH "1"
