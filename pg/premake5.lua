@@ -10,6 +10,10 @@ workspace "pg"
     linkoptions{ "-Wl,--no-as-needed", "-static-libstdc++" }
   end
 
+  local gitHash = string.sub(io.readfile("../.git/refs/heads/master") or "[unknown]", 1, 12)
+  print("Building from Git " .. gitHash)
+  defines { "BUILD_GIT_HASH=\"" .. gitHash .. "\"" }
+
   configuration 'Release'
     defines { 'NDEBUG' }
     optimize "On"
