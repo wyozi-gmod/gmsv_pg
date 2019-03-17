@@ -5,7 +5,7 @@
 
 using namespace GarrysMod::Lua;
 
-class QueryManager : public LuaEventEmitter<239, QueryManager> {
+class QueryManager {
 private:
     std::unique_ptr<ThreadPool> pool;
 public:
