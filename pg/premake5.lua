@@ -1,5 +1,3 @@
-local config = require "config"
-
 workspace "pg"
   location "./project"
   configurations { "Release" }
@@ -9,7 +7,7 @@ workspace "pg"
   vectorextensions "SSE"
 
   if os.target() ~= 'windows' then
-    linkoptions{ "-static-libstdc++" }
+    linkoptions{ "-Wl,--no-as-needed", "-static-libstdc++" }
   end
 
   configuration 'Release'
@@ -39,7 +37,3 @@ project "pg"
     pic "On"
     links { 'pthread', 'pq', 'pqxx' }
   end
-
-  postbuildcommands {
-    '{COPY} "%{cfg.buildtarget.abspath}" "'..config.garrysmod..'/garrysmod/lua/bin/'..config.libname..'"*',
-  }
