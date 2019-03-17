@@ -56,8 +56,8 @@ namespace Lua {
       }
 
       // If zero emitters stored, remove Think hook
-      if (_emitters.size() == 0)
-        resetThink(state);
+      //if (_emitters.size() == 0)
+      //  resetThink(state);
     }
 
     /**
