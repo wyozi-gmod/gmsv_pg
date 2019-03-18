@@ -112,8 +112,8 @@ namespace Lua {
   public:
     static LuaEventEmitterManager& Current(lua_State *state)
     {
-      thread_local LuaEventEmitterManager manager;
-      return manager;
+      static std::map<GarrysMod::Lua::ILuaBase*, LuaEventEmitterManager> _managers;
+      return _managers[state->luabase];
     }
   }; // LuaEventEmitterManager
 
